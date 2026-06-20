@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <title>Auto Copy Trim</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="panel">
+      <h1>Auto Copy Trim</h1>
+
+      <label class="setting">
+        <input id="autoCopyPageSelection" type="checkbox">
+        <span>
+          <strong>普通网页选中后自动复制</strong>
+          <small>复制前自动去掉两边空格和换行</small>
+        </span>
+      </label>
+
+      <label class="setting">
+        <input id="editableCtrlCopy" type="checkbox">
+        <span>
+          <strong>输入框按住 Ctrl 选中时复制</strong>
+          <small>适用于 input、textarea、可编辑区域</small>
+        </span>
+      </label>
+
+      <label class="setting">
+        <input id="middleClickPaste" type="checkbox">
+        <span>
+          <strong>鼠标中键粘贴</strong>
+          <small>只在输入框、文本框、可编辑区域生效</small>
+        </span>
+      </label>
+
+      <label class="setting">
+        <input id="middleClickPasteOverwrite" type="checkbox">
+        <span>
+          <strong>粘贴时覆盖原内容</strong>
+          <small>关闭则在光标位置插入，不清空原内容</small>
+        </span>
+      </label>
+
+      <p id="status" class="status" aria-live="polite"></p>
+    </main>
+
+    <script src="core.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
