@@ -134,6 +134,16 @@ test("shouldOverwriteOnPaste reflects the configured setting and defaults to ove
   assert.equal(core.shouldOverwriteOnPaste({ middleClickPasteOverwrite: false }), false);
 });
 
+test("shouldTryNativePasteCommand only trusts execCommand paste for plain form fields", () => {
+  assert.equal(core.shouldTryNativePasteCommand({ tagName: "INPUT" }), true);
+  assert.equal(core.shouldTryNativePasteCommand({ tagName: "TEXTAREA" }), true);
+  assert.equal(
+    core.shouldTryNativePasteCommand({ isContentEditable: true, tagName: "DIV" }),
+    false,
+  );
+  assert.equal(core.shouldTryNativePasteCommand(null), false);
+});
+
 test("clipboard read strategy tries content-script APIs before background fallback", () => {
   assert.deepEqual(core.getClipboardReadStrategyOrder(), [
     "navigatorClipboard",

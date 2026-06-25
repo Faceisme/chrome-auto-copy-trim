@@ -223,7 +223,7 @@
 
     const overwrite = core.shouldOverwriteOnPaste(settings);
 
-    if (pasteDirectlyIntoTarget(pasteTarget, overwrite)) {
+    if (core.shouldTryNativePasteCommand(pasteTarget) && pasteDirectlyIntoTarget(pasteTarget, overwrite)) {
       return;
     }
 

@@ -142,6 +142,15 @@
     return Boolean(resolveSettings(settings).middleClickPasteOverwrite);
   }
 
+  function shouldTryNativePasteCommand(target) {
+    // Plain form fields handle execCommand("paste") reliably. Rich
+    // contenteditable editors (Slate/ProseMirror/etc.) often hijack the paste
+    // event and silently drop an extension-initiated paste while execCommand
+    // still reports success, so skip the shortcut and use the clipboard
+    // read + insertText path for them instead.
+    return isTextInputElement(target);
+  }
+
   function getClipboardReadStrategyOrder() {
     return ["navigatorClipboard", "execCommandPaste", "runtimeMessage"];
   }
@@ -170,6 +179,7 @@
     shouldPasteOnMiddleClick,
     shouldHandleMiddlePasteEvent,
     shouldOverwriteOnPaste,
+    shouldTryNativePasteCommand,
     getClipboardReadStrategyOrder,
     getMiddlePasteStrategyOrder,
     getToastMessage,
