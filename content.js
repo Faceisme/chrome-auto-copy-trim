@@ -13,8 +13,13 @@
 
   start();
 
-  async function start() {
-    settings = await readSettings();
+  function start() {
+    // 同步挂载监听器,使中键粘贴在脚本注入后立即可用,无需等待页面或
+    // 设置加载完成。settings 已用默认值同步初始化,稍后再用存储值覆盖。
+    document.addEventListener("mouseup", handleMouseUp, true);
+    document.addEventListener("keyup", handleKeyUp, true);
+    document.addEventListener("mousedown", handleMiddlePaste, true);
+    document.addEventListener("auxclick", handleAuxClick, true);
 
     chrome.storage.onChanged.addListener((changes, areaName) => {
       if (areaName !== "sync") {
@@ -28,10 +33,10 @@
       settings = core.resolveSettings(next);
     });
 
-    document.addEventListener("mouseup", handleMouseUp, true);
-    document.addEventListener("keyup", handleKeyUp, true);
-    document.addEventListener("mousedown", handleMiddlePaste, true);
-    document.addEventListener("auxclick", handleAuxClick, true);
+    // 在后台读取存储的设置,到达前先沿用默认值。
+    readSettings().then((loaded) => {
+      settings = loaded;
+    });
   }
 
   function readSettings() {

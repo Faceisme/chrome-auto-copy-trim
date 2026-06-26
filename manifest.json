@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Auto Copy Trim",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Automatically copy selected text after trimming surrounding whitespace, with Ctrl-copy support for editable fields and optional middle-click paste.",
   "icons": {
     "16": "icons/icon16.png",
@@ -40,7 +40,7 @@
         "core.js",
         "content.js"
       ],
-      "run_at": "document_idle",
+      "run_at": "document_start",
       "all_frames": true
     }
   ]
