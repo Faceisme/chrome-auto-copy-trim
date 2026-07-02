@@ -159,9 +159,29 @@
     };
   }
 
+  function isClipboardFeatureAllowed(feature) {
+    // Calling navigator.clipboard in a frame whose permissions policy blocks
+    // it gets reported as an extension error even when caught, so check the
+    // policy up front (e.g. the google.com iframe inside chrome://whats-new/).
+    const policy = document.permissionsPolicy || document.featurePolicy;
+    if (!policy || typeof policy.allowsFeature !== "function") {
+      return true;
+    }
+
+    try {
+      return policy.allowsFeature(feature);
+    } catch (_) {
+      return true;
+    }
+  }
+
   async function writeClipboardText(text) {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
+      if (
+        navigator.clipboard &&
+        navigator.clipboard.writeText &&
+        isClipboardFeatureAllowed("clipboard-write")
+      ) {
         await navigator.clipboard.writeText(text);
         return true;
       }
@@ -304,7 +324,11 @@
 
   async function readClipboardText() {
     try {
-      if (navigator.clipboard && navigator.clipboard.readText) {
+      if (
+        navigator.clipboard &&
+        navigator.clipboard.readText &&
+        isClipboardFeatureAllowed("clipboard-read")
+      ) {
         return await navigator.clipboard.readText();
       }
     } catch (_) {
