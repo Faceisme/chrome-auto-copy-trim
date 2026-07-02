@@ -77,6 +77,108 @@ test("resolveSelectionEditableState treats active input selection as editable", 
   );
 });
 
+test("resolveSelectionEditableState treats a form-scoped selection as editable", () => {
+  assert.equal(
+    core.resolveSelectionEditableState({
+      eventTargetEditable: false,
+      activeTextInputHasSelection: false,
+      selectionRangeEditable: false,
+      selectionWithinFormScope: true,
+    }),
+    true,
+  );
+});
+
+test("isWithinFormFieldScope treats chrome inside a text-field form as editable", () => {
+  const form = { querySelectorAll: () => [{ tagName: "INPUT", type: "text" }] };
+  const searchLabel = {
+    tagName: "A",
+    closest: (selector) => (selector === "form" ? form : null),
+  };
+  assert.equal(core.isWithinFormFieldScope(searchLabel), true);
+});
+
+test("isWithinFormFieldScope treats a role=search region as editable", () => {
+  const region = {
+    tagName: "SPAN",
+    closest: (selector) => (selector === "[role='search']" ? { tagName: "DIV" } : null),
+  };
+  assert.equal(core.isWithinFormFieldScope(region), true);
+});
+
+test("isWithinFormFieldScope ignores forms without a text field", () => {
+  const form = {
+    querySelectorAll: () => [{ tagName: "INPUT", type: "checkbox" }, { tagName: "BUTTON" }],
+  };
+  const label = {
+    tagName: "SPAN",
+    closest: (selector) => (selector === "form" ? form : null),
+  };
+  assert.equal(core.isWithinFormFieldScope(label), false);
+});
+
+test("isWithinFormFieldScope leaves plain page content copyable", () => {
+  const cell = { tagName: "TD", closest: () => null };
+  assert.equal(core.isWithinFormFieldScope(cell), false);
+});
+
+test("shouldCopySelection suppresses input text that leaked into a page selection", () => {
+  // Right-to-left overshoot past a field's edge: window.getSelection() reports
+  // the field's own value, but the range still resolves inside the search form.
+  const form = { querySelectorAll: () => [{ tagName: "INPUT", type: "text" }] };
+  const wrapperInsideForm = {
+    tagName: "DIV",
+    closest: (selector) => (selector === "form" ? form : null),
+  };
+
+  const editable = core.resolveSelectionEditableState({
+    eventTargetEditable: false,
+    activeTextInputHasSelection: false,
+    selectionRangeEditable: false,
+    selectionWithinFormScope: core.isWithinFormFieldScope(wrapperInsideForm),
+  });
+
+  assert.equal(editable, true);
+  assert.equal(
+    core.shouldCopySelection({
+      text: "OLDTEXT_IN_BOX",
+      editable,
+      ctrlKey: false,
+      settings: { autoCopyPageSelection: true, editableCtrlCopy: true },
+    }),
+    false,
+  );
+});
+
+test("shouldCopySelection skips search-bar labels next to a text field", () => {
+  // Reproduces the forum search bar: a right-to-left sweep lands on the
+  // "帖子" dropdown link, an <a> that lives in the same <form> as the search
+  // input. It must be treated as editable so it is not auto-copied.
+  const form = { querySelectorAll: () => [{ tagName: "INPUT", type: "text" }] };
+  const searchLabel = {
+    tagName: "A",
+    closest: (selector) => (selector === "form" ? form : null),
+  };
+
+  const editable = core.resolveSelectionEditableState({
+    eventTargetEditable: core.isEditableTarget(searchLabel),
+    activeTextInputHasSelection: false,
+    selectionRangeEditable: false,
+    selectionWithinFormScope: core.isWithinFormFieldScope(searchLabel),
+  });
+
+  assert.equal(editable, true);
+  assert.equal(
+    core.shouldCopySelection({
+      text: "帖子",
+      editable,
+      ctrlKey: false,
+      settings: { autoCopyPageSelection: true, editableCtrlCopy: true },
+    }),
+    false,
+  );
+});
+
 test("shouldCopySelection can disable editable ctrl-copy", () => {
   assert.equal(
     core.shouldCopySelection({

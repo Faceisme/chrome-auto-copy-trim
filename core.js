@@ -97,6 +97,40 @@
     return isTextInputElement(target) || isContentEditableElement(target);
   }
 
+  function formContainsTextField(form) {
+    if (!form || typeof form.querySelectorAll !== "function") {
+      return false;
+    }
+
+    for (const field of form.querySelectorAll("input, textarea")) {
+      if (isTextInputElement(field)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function isWithinFormFieldScope(target) {
+    // A selection that lands on the chrome around a text field (search-bar
+    // labels, the submit link, a type dropdown, etc.) is still "the user
+    // fiddling with a form", not page content to auto-copy. Treat a selection
+    // as editable when it sits inside a role="search" region, or inside a
+    // <form> that owns a real text field. The post body on forum pages lives
+    // outside any such form, so normal page copies are unaffected.
+    const element = getElementTarget(target);
+
+    if (!element || typeof element.closest !== "function") {
+      return false;
+    }
+
+    if (element.closest("[role='search']")) {
+      return true;
+    }
+
+    return formContainsTextField(element.closest("form"));
+  }
+
   function resolveSettings(settings) {
     return {
       ...DEFAULT_SETTINGS,
@@ -122,8 +156,14 @@
     eventTargetEditable,
     activeTextInputHasSelection,
     selectionRangeEditable,
+    selectionWithinFormScope,
   }) {
-    return Boolean(eventTargetEditable || activeTextInputHasSelection || selectionRangeEditable);
+    return Boolean(
+      eventTargetEditable ||
+        activeTextInputHasSelection ||
+        selectionRangeEditable ||
+        selectionWithinFormScope,
+    );
   }
 
   function shouldPasteOnMiddleClick({ button, editable, middleClickPaste }) {
@@ -173,6 +213,7 @@
     isTextInputElement,
     isContentEditableElement,
     isEditableTarget,
+    isWithinFormFieldScope,
     resolveSettings,
     shouldCopySelection,
     resolveSelectionEditableState,

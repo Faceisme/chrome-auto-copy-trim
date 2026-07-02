@@ -125,11 +125,24 @@
     const rangeTarget =
       selection && selection.rangeCount > 0 ? selection.getRangeAt(0).commonAncestorContainer : target;
 
+    // A drag that starts inside a text field and overshoots its edge makes the
+    // selection escape into the document: window.getSelection() then reports the
+    // field's own value while focus/target land on neighbouring chrome. Check
+    // the event target, the range, and both selection endpoints against the
+    // form scope so this leaked field text is treated as editable, not copied.
+    const anchorNode = selection ? selection.anchorNode : null;
+    const focusNode = selection ? selection.focusNode : null;
+
     return {
       editable: core.resolveSelectionEditableState({
         eventTargetEditable: core.isEditableTarget(target),
         activeTextInputHasSelection: activeInputSelection.hasSelection,
         selectionRangeEditable: core.isEditableTarget(rangeTarget),
+        selectionWithinFormScope:
+          core.isWithinFormFieldScope(target) ||
+          core.isWithinFormFieldScope(rangeTarget) ||
+          core.isWithinFormFieldScope(anchorNode) ||
+          core.isWithinFormFieldScope(focusNode),
       }),
       text: selection ? selection.toString() : "",
     };
